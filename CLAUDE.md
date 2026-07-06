@@ -20,7 +20,8 @@ See `rules/devrelay.md` for DevRelay rules.
 | SSH | dartssh2 ^2.10.0 | 純Dart実装、SSH2対応 |
 | ターミナル表示 | xterm ^4.0.0 | VT100/xtermエスケープ対応 |
 | 状態管理 | flutter_riverpod ^2.6.1 | 導入済み、段階的に活用 |
-| ローカル保存 | shared_preferences ^2.3.0 | 接続先情報の永続化 |
+| ローカル保存 | shared_preferences ^2.3.0 | 接続先メタデータの永続化 |
+| セキュア保存 | flutter_secure_storage ^9.2.0 | パスワード・秘密鍵の暗号化保存 |
 
 ## ビルド & 実行
 

@@ -44,8 +44,12 @@ dependencies:
   # 状態管理（Riverpod）
   flutter_riverpod: ^2.6.1
 
-  # ローカルストレージ（接続先情報の永続化）
+  # ローカルストレージ（接続先メタデータの永続化）
   shared_preferences: ^2.3.0
+
+  # セキュアストレージ（パスワード・秘密鍵の暗号化保存）
+  # iOS: Keychain / Android: Keystore + AES暗号化
+  flutter_secure_storage: ^9.2.0
 
 dev_dependencies:
   flutter_test:

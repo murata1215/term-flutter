@@ -2,8 +2,10 @@
 ///
 /// 接続先のホスト情報と認証情報をまとめて管理する。
 /// パスワード認証と秘密鍵認証の両方に対応する。
-/// shared_preferences に JSON として保存するための
-/// シリアライズ/デシリアライズメソッドを持つ。
+///
+/// 保存時は非機密情報（メタデータ）と機密情報（シークレット）を分離する:
+/// - メタデータ（name, host, port, username, authType）→ shared_preferences
+/// - シークレット（password, privateKey, passphrase）→ flutter_secure_storage
 class SshConnectionInfo {
   /// 接続先の表示名（ユーザーが識別するための名前）
   final String name;
@@ -22,15 +24,15 @@ class SshConnectionInfo {
   final String authType;
 
   /// 認証に使用するパスワード（パスワード認証時に使用）
-  /// TODO: 将来的に flutter_secure_storage に移行予定
+  /// flutter_secure_storage（iOS Keychain / Android Keystore）に暗号化保存
   final String password;
 
   /// 秘密鍵のPEM文字列（秘密鍵認証時に使用）
-  /// OpenSSH形式（-----BEGIN OPENSSH PRIVATE KEY-----）や
-  /// PEM形式（-----BEGIN RSA PRIVATE KEY-----）に対応
+  /// flutter_secure_storage に暗号化保存
   final String privateKey;
 
   /// 秘密鍵のパスフレーズ（任意、パスフレーズ付き秘密鍵の場合に使用）
+  /// flutter_secure_storage に暗号化保存
   final String passphrase;
 
   /// コンストラクタ
@@ -59,10 +61,55 @@ class SshConnectionInfo {
   /// host + port + username の組み合わせで同一接続先かどうかを判定する
   String get uniqueKey => '$username@$host:$port';
 
+  /// メタデータ（非機密情報）のみをJSON（Map）に変換する
+  ///
+  /// shared_preferences に保存する際に使用する。
+  /// パスワード・秘密鍵・パスフレーズは含まない（secure_storage に別途保存）。
+  Map<String, dynamic> toMetaJson() {
+    return {
+      'name': name,
+      'host': host,
+      'port': port,
+      'username': username,
+      'authType': authType,
+    };
+  }
+
+  /// シークレット（機密情報）のみをJSON（Map）に変換する
+  ///
+  /// flutter_secure_storage に保存する際に使用する。
+  Map<String, dynamic> toSecretJson() {
+    return {
+      'password': password,
+      'privateKey': privateKey,
+      'passphrase': passphrase,
+    };
+  }
+
+  /// メタデータとシークレットを結合してインスタンスを生成するファクトリ
+  ///
+  /// [meta] shared_preferences から読み込んだメタデータ
+  /// [secret] flutter_secure_storage から読み込んだシークレット（null許容）
+  factory SshConnectionInfo.fromMetaAndSecret(
+    Map<String, dynamic> meta, [
+    Map<String, dynamic>? secret,
+  ]) {
+    return SshConnectionInfo(
+      name: meta['name'] as String? ?? '',
+      host: meta['host'] as String? ?? '',
+      port: meta['port'] as int? ?? 22,
+      username: meta['username'] as String? ?? '',
+      authType: meta['authType'] as String? ?? 'password',
+      password: secret?['password'] as String? ?? '',
+      privateKey: secret?['privateKey'] as String? ?? '',
+      passphrase: secret?['passphrase'] as String? ?? '',
+    );
+  }
+
   /// JSON（Map）からインスタンスを生成するファクトリコンストラクタ
   ///
-  /// shared_preferences から読み込んだデータを復元する際に使用する。
-  /// 旧バージョン（authType未対応）のデータも後方互換性を保って読み込む。
+  /// マイグレーション用: 旧形式（全情報が1つのJSONに含まれる）からの読み込みに使用。
+  /// 新形式では fromMetaAndSecret() を使用する。
   factory SshConnectionInfo.fromJson(Map<String, dynamic> json) {
     return SshConnectionInfo(
       name: json['name'] as String? ?? '',
@@ -74,21 +121,5 @@ class SshConnectionInfo {
       privateKey: json['privateKey'] as String? ?? '',
       passphrase: json['passphrase'] as String? ?? '',
     );
-  }
-
-  /// インスタンスを JSON（Map）に変換する
-  ///
-  /// shared_preferences に保存する際に使用する。
-  Map<String, dynamic> toJson() {
-    return {
-      'name': name,
-      'host': host,
-      'port': port,
-      'username': username,
-      'authType': authType,
-      'password': password,
-      'privateKey': privateKey,
-      'passphrase': passphrase,
-    };
   }
 }
