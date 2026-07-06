@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/ssh_connection_info.dart';
 import '../services/connection_storage_service.dart';
+import '../services/host_key_storage_service.dart';
 import 'terminal_screen.dart';
 
 /// ホーム画面（接続先一覧 + 新規接続）
@@ -20,6 +21,9 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   /// 接続先ストレージサービス
   final ConnectionStorageService _storageService = ConnectionStorageService();
+
+  /// ホスト鍵ストレージサービス
+  final HostKeyStorageService _hostKeyStorage = HostKeyStorageService();
 
   /// 保存済み接続先リスト
   List<SshConnectionInfo> _savedConnections = [];
@@ -62,6 +66,8 @@ class _HomeScreenState extends State<HomeScreen> {
   /// 保存済み接続先を削除する
   Future<void> _deleteConnection(SshConnectionInfo info) async {
     await _storageService.deleteConnection(info);
+    // ホスト鍵フィンガープリントも合わせて削除
+    await _hostKeyStorage.deleteFingerprint(info.host, info.port);
     _loadConnections();
 
     if (mounted) {

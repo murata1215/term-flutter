@@ -7,6 +7,7 @@ import 'package:xterm/xterm.dart';
 import '../models/ssh_connection_info.dart';
 import '../services/ssh_service.dart';
 import '../widgets/command_input_bar.dart';
+import '../widgets/host_key_dialog.dart';
 
 /// ターミナル画面
 ///
@@ -150,7 +151,11 @@ class _TerminalScreenState extends State<TerminalScreen>
   /// 接続失敗時: エラーメッセージを表示
   Future<void> _connectSsh() async {
     try {
-      await _sshService.connect(widget.connectionInfo, _terminal);
+      await _sshService.connect(
+        widget.connectionInfo,
+        _terminal,
+        onHostKeyVerify: _onHostKeyVerify,
+      );
 
       // 接続成功コールバックを呼び出し（接続先の自動保存用）
       widget.onConnectionSuccess?.call();
@@ -192,6 +197,7 @@ class _TerminalScreenState extends State<TerminalScreen>
 
     try {
       // 同じターミナルオブジェクトに接続（出力が続けて表示される）
+      // 再接続時はホスト鍵検証コールバックなし（保存済みなら自動承認）
       await _sshService.connect(widget.connectionInfo, _terminal);
 
       // 再接続成功メッセージをターミナルに出力（黄色で目立たせる）
@@ -471,6 +477,33 @@ class _TerminalScreenState extends State<TerminalScreen>
         ),
       ],
     );
+  }
+
+  /// ホスト鍵検証コールバック
+  ///
+  /// SSH接続時にサーバーのホスト鍵を検証する。
+  /// 初回接続時: フィンガープリント確認ダイアログを表示
+  /// 鍵変更時: 警告ダイアログを表示
+  /// 2回目以降（一致時）: ssh_service 内で自動承認されるためここには来ない
+  Future<HostKeyVerifyResult> _onHostKeyVerify(
+    String host,
+    int port,
+    String type,
+    String fingerprint,
+    String? storedFingerprint,
+  ) async {
+    if (!mounted) return HostKeyVerifyResult.reject;
+
+    final result = await showHostKeyDialog(
+      context: context,
+      host: host,
+      port: port,
+      type: type,
+      fingerprint: fingerprint,
+      storedFingerprint: storedFingerprint,
+    );
+
+    return result;
   }
 
   /// 切断時のオーバーレイバナーを構築する
