@@ -1,5 +1,20 @@
 # Changelog
 
+## 2026-07-06 — セキュリティ強化（v0.2）
+
+### flutter_secure_storage への移行
+- パスワード・秘密鍵・パスフレーズを flutter_secure_storage（iOS Keychain / Android Keystore）で暗号化保存
+- 非機密情報（name, host, port, username, authType）は shared_preferences に残す
+- 旧形式（平文保存）からの自動マイグレーション対応
+
+### ホスト鍵検証（TOFU）
+- TOFU（Trust On First Use）方式でホスト鍵を検証
+- 初回接続時: フィンガープリント確認ダイアログを表示
+- 2回目以降: 保存済みフィンガープリントと自動照合
+- 鍵変更検知: 中間者攻撃の警告ダイアログ（赤枠）を表示
+- フィンガープリントは flutter_secure_storage に暗号化保存
+- 接続先削除時にホスト鍵も合わせて削除
+
 ## 2026-07-06 — 初期実装（v0.1）
 
 ### SSH接続
@@ -23,7 +38,7 @@
 - Ctrl+C ボタンをAppBarに配置
 
 ### 接続先管理
-- shared_preferences で接続先情報を永続化（JSON配列）
+- shared_preferences で接続先メタデータを永続化
 - SSH接続成功時に自動保存
 - ホーム画面に保存済み接続先一覧を表示（タップで即接続）
 - スワイプで削除（確認ダイアログ + 取り消し可能）

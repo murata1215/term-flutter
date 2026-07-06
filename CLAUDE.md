@@ -39,9 +39,11 @@ lib/
 ├── main.dart                          # エントリポイント（ProviderScope）
 ├── app.dart                           # MaterialApp（ダークテーマ）
 ├── models/ssh_connection_info.dart    # SSH接続情報データクラス（JSON対応）
-├── services/ssh_service.dart          # SSH接続・送受信サービス
+├── services/ssh_service.dart          # SSH接続・送受信・ホスト鍵検証
 ├── services/connection_storage_service.dart  # 接続先の永続化サービス
+├── services/host_key_storage_service.dart    # ホスト鍵フィンガープリント保存
 ├── screens/home_screen.dart           # 接続先一覧 + 新規接続フォーム
 ├── screens/terminal_screen.dart       # ターミナル表示画面
-└── widgets/command_input_bar.dart     # コマンド入力バー（画面下部固定）
+├── widgets/command_input_bar.dart     # コマンド入力バー（画面下部固定）
+└── widgets/host_key_dialog.dart       # ホスト鍵確認/警告ダイアログ
 ```
